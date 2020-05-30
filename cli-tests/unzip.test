@@ -146,3 +146,13 @@ after: [ ! -d d1/d2/dir ]
 expected-stdout:
 	bb
 ---
+
+name: unzip -j
+# Note: the RI outputs a bunch of trailing whitespace for some reason.
+command: unzip -j $FILES/example.zip d1/d2/x.txt | sed 's/ *$//'
+after: [ ! -f d1/d2/x.txt ]
+after: [ -f x.txt ]
+expected-stdout:
+	Archive:  $FILES/example.zip
+	  inflating: x.txt
+---

@@ -53,6 +53,7 @@ static Role role;
 static OverwriteMode overwrite_mode = kPrompt;
 static bool flag_1 = false;
 static std::string flag_d;
+static bool flag_j = false;
 static bool flag_l = false;
 static bool flag_p = false;
 static bool flag_q = false;
@@ -211,11 +212,14 @@ static void ExtractToPipe(ZipArchiveHandle zah, const ZipEntry64& entry, const s
   delete[] buffer;
 }
 
-static void ExtractOne(ZipArchiveHandle zah, const ZipEntry64& entry, const std::string& name) {
+static void ExtractOne(ZipArchiveHandle zah, const ZipEntry64& entry, std::string name) {
   // Bad filename?
   if (StartsWith(name, "/") || StartsWith(name, "../") || name.find("/../") != std::string::npos) {
     die(0, "bad filename %s", name.c_str());
   }
+
+  // Junk the path if we were asked to.
+  if (flag_j) name = android::base::Basename(name);
 
   // Where are we actually extracting to (for human-readable output)?
   // flag_d is the empty string if -d wasn't used, or has a trailing '/'
@@ -388,6 +392,7 @@ static void ShowHelp(bool full) {
         "exclude (-x) lists use shell glob patterns.\n"
         "\n"
         "-d DIR	Extract into DIR\n"
+        "-j	Junk (ignore) file paths\n"
         "-l	List contents (-lq excludes archive name, -lv is verbose)\n"
         "-n	Never overwrite files (default: prompt)\n"
         "-o	Always overwrite files\n"
@@ -460,11 +465,14 @@ int main(int argc, char* argv[]) {
     }
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "-d:hlnopqvx", opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "-d:hjlnopqvx", opts, nullptr)) != -1) {
       switch (opt) {
         case 'd':
           flag_d = optarg;
           if (!EndsWith(flag_d, "/")) flag_d += '/';
+          break;
+        case 'j':
+          flag_j = true;
           break;
         case 'l':
           flag_l = true;
