@@ -677,7 +677,7 @@ static int32_t FindEntry(const ZipArchive* archive, std::string_view entryName,
   const uint8_t* ptr = base_ptr + nameOffset;
   ptr -= sizeof(CentralDirectoryRecord);
 
-  // This is the base of our mmapped region, we have to sanity check that
+  // This is the base of our mmapped region, we have to check that
   // the name that's in the hash table is a pointer to a location within
   // this mapped region.
   if (ptr < base_ptr || ptr > base_ptr + archive->central_directory.GetMapLength()) {
@@ -688,7 +688,7 @@ static int32_t FindEntry(const ZipArchive* archive, std::string_view entryName,
   auto cdr = reinterpret_cast<const CentralDirectoryRecord*>(ptr);
 
   // The offset of the start of the central directory in the zipfile.
-  // We keep this lying around so that we can sanity check all our lengths
+  // We keep this lying around so that we can check all our lengths
   // and our per-file structures.
   const off64_t cd_offset = archive->directory_offset;
 
