@@ -645,7 +645,11 @@ static int32_t ValidateDataDescriptor(MappedZipFile& mapped_zip, const ZipEntry6
   uint8_t* ddReadPtr = (ddSignature == DataDescriptor::kOptSignature) ? ddBuf + 4 : ddBuf;
   DataDescriptor descriptor{};
   descriptor.crc32 = ConsumeUnaligned<uint32_t>(&ddReadPtr);
-  if (entry->zip64_format_size) {
+  // Don't use entry->zip64_format_size, because that is set to true even if
+  // both compressed/uncompressed size are < 0xFFFFFFFF.
+  constexpr auto u32max = std::numeric_limits<uint32_t>::max();
+  if (entry->compressed_length >= u32max ||
+      entry->uncompressed_length >= u32max) {
     descriptor.compressed_size = ConsumeUnaligned<uint64_t>(&ddReadPtr);
     descriptor.uncompressed_size = ConsumeUnaligned<uint64_t>(&ddReadPtr);
   } else {

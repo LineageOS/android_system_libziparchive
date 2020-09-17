@@ -1236,6 +1236,36 @@ TEST_F(Zip64ParseTest, findEntry) {
   CloseArchive(handle);
 }
 
+TEST_F(Zip64ParseTest, dataDescriptor) {
+  AddEntry("a.txt", std::vector<uint8_t>(200, 'a'), true, true, true, false);
+  AddEntry("b.txt", std::vector<uint8_t>(300, 'b'), true, true, true, false);
+  // We want a file with compressed size in extended fields, but
+  // data descriptor still in 32 bit values.
+  auto& local_entry = file_entries_.back();
+  local_entry.data_descriptor.resize(16);
+  uint8_t* write_ptr = local_entry.data_descriptor.data();
+  EmitUnaligned<uint32_t>(&write_ptr, DataDescriptor::kOptSignature);
+  EmitUnaligned<uint32_t>(&write_ptr, 0 /* crc */);
+  EmitUnaligned<uint32_t>(&write_ptr, 300);
+  EmitUnaligned<uint32_t>(&write_ptr, 300);
+
+  ConstructEocd();
+  ConstructZipFile();
+
+  ZipArchiveHandle handle;
+  ASSERT_EQ(0, OpenArchiveFromMemory(zip_content_.data(), zip_content_.size(),
+                                     "debug_zip64", &handle));
+  ZipEntry64 entry;
+  ASSERT_EQ(0, FindEntry(handle, "a.txt", &entry));
+  ASSERT_EQ(200, entry.uncompressed_length);
+  ASSERT_EQ(200, entry.compressed_length);
+
+  ASSERT_EQ(0, FindEntry(handle, "b.txt", &entry));
+  ASSERT_EQ(300, entry.uncompressed_length);
+  ASSERT_EQ(300, entry.compressed_length);
+  CloseArchive(handle);
+}
+
 TEST_F(Zip64ParseTest, openFileIncorrectDataSizeInLocalExtendedField) {
   AddEntry("a.txt", std::vector<uint8_t>(100, 'a'), true, true, false);
   ASSERT_EQ(1, file_entries_.size());
