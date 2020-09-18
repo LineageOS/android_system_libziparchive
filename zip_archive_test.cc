@@ -1355,3 +1355,37 @@ TEST_F(Zip64ParseTest, extractWithDataDescriptor) {
   ASSERT_EQ(0, ExtractToWriter(handle, &entry, &writer));
   ASSERT_EQ(content, writer.GetOutput());
 }
+
+TEST_F(Zip64ParseTest, extraLFHOffset) {
+  std::vector<uint8_t> content(300, 'b');
+  AddEntry("a.txt", std::vector<uint8_t>(200, 'a'), true, true, true);
+  AddEntry("b.txt", content, true, true, true, true /* data descriptor */);
+
+  ASSERT_EQ(cd_entries_.back().extended_field.size(), 4 + 8 * 3)
+      << "Extended field should contain 2 bytes id, 2 bytes size, and 3 "
+         "values, each 64 bit";
+  uint32_t local_file_header_offset = 0;
+  std::for_each(file_entries_.begin(), file_entries_.end() - 1,
+                [&local_file_header_offset](const LocalFileEntry& file_entry) {
+                  local_file_header_offset += file_entry.GetSize();
+                });
+  auto& cd_entry = cd_entries_.back();
+  // We want to construct a central directory record with LFH < 0xFFFFFFFF
+  // but still comes with a 64 bit LFH in extended field.
+  ConstructCentralDirectoryRecord(
+      "b.txt", static_cast<uint32_t>(content.size()),
+      static_cast<uint32_t>(content.size()), local_file_header_offset,
+      &cd_entry.central_directory_record);
+  ConstructEocd();
+  ConstructZipFile();
+
+  ZipArchiveHandle handle;
+  ASSERT_EQ(0, OpenArchiveFromMemory(zip_content_.data(), zip_content_.size(),
+                                     "debug_zip64", &handle));
+  ZipEntry64 entry;
+  ASSERT_EQ(0, FindEntry(handle, "b.txt", &entry));
+
+  VectorWriter writer;
+  ASSERT_EQ(0, ExtractToWriter(handle, &entry, &writer));
+  ASSERT_EQ(content, writer.GetOutput());
+}
