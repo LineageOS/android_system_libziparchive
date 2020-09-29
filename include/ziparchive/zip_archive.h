@@ -337,6 +337,14 @@ class Reader {
   void operator=(const Reader&) = delete;
 };
 
+/**
+ * Uncompress a given zip entry to given |writer|.
+ *
+ * Returns 0 on success and negative values on failure.
+ */
+int32_t ExtractToWriter(ZipArchiveHandle handle, const ZipEntry64* entry,
+                        zip_archive::Writer* writer);
+
 /*
  * Inflates the first |compressed_length| bytes of |reader| to a given |writer|.
  * |crc_out| is set to the CRC32 checksum of the uncompressed data.

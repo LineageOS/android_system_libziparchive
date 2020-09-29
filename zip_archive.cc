@@ -1377,6 +1377,8 @@ static int32_t CopyEntryToWriter(MappedZipFile& mapped_zip, const ZipEntry64* en
   return 0;
 }
 
+namespace zip_archive {
+
 int32_t ExtractToWriter(ZipArchiveHandle handle, const ZipEntry64* entry,
                         zip_archive::Writer* writer) {
   const uint16_t method = entry->method;
@@ -1407,6 +1409,8 @@ int32_t ExtractToWriter(ZipArchiveHandle handle, const ZipEntry64* entry,
 
   return return_value;
 }
+
+}  // namespace zip_archive
 
 int32_t ExtractToMemory(ZipArchiveHandle archive, const ZipEntry* entry, uint8_t* begin,
                         size_t size) {
@@ -1597,7 +1601,7 @@ bool ZipArchive::InitializeCentralDirectory(off64_t cd_start_offset, size_t cd_s
   return true;
 }
 
-// This function returns the embedded timestamp as is; and doesn't perform validations.
+// This function returns the embedded timestamp as is and doesn't perform validation.
 tm ZipEntryCommon::GetModificationTime() const {
   tm t = {};
 

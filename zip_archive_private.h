@@ -106,9 +106,6 @@ struct ZipArchive {
   bool InitializeCentralDirectory(off64_t cd_start_offset, size_t cd_size);
 };
 
-int32_t ExtractToWriter(ZipArchiveHandle handle, const ZipEntry64* entry,
-                        zip_archive::Writer* writer);
-
 // Reads the unaligned data of type |T| and auto increment the offset.
 template <typename T>
 static T ConsumeUnaligned(uint8_t** address) {

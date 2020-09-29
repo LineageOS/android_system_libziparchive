@@ -189,6 +189,7 @@ cc_binary {
     shared_libs: [
         "libbase",
         "libziparchive",
+        "libz",
     ],
     recovery_available: true,
     host_supported: true,

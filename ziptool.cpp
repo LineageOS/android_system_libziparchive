@@ -34,6 +34,7 @@
 #include <android-base/file.h>
 #include <android-base/strings.h>
 #include <ziparchive/zip_archive.h>
+#include <zlib.h>
 
 using android::base::EndsWith;
 using android::base::StartsWith;
@@ -57,6 +58,7 @@ static bool flag_j = false;
 static bool flag_l = false;
 static bool flag_p = false;
 static bool flag_q = false;
+static bool flag_t = false;
 static bool flag_v = false;
 static bool flag_x = false;
 static const char* archive_name = nullptr;
@@ -65,8 +67,10 @@ static std::set<std::string> excludes;
 static uint64_t total_uncompressed_length = 0;
 static uint64_t total_compressed_length = 0;
 static size_t file_count = 0;
+static size_t bad_crc_count = 0;
 
 static const char* g_progname;
+static int g_exit_code = 0;
 
 static void die(int error, const char* fmt, ...) {
   va_list ap;
@@ -154,6 +158,18 @@ static void MaybeShowFooter() {
           "---------                     -------\n"
           "%9" PRId64 "                     %zu file%s\n",
           total_uncompressed_length, file_count, (file_count == 1) ? "" : "s");
+    } else if (flag_t) {
+      if (bad_crc_count != 0) {
+        printf("At least one error was detected in %s.\n", archive_name);
+      } else {
+        printf("No errors detected in ");
+        if (includes.empty() && excludes.empty()) {
+          printf("compressed data of %s.\n", archive_name);
+        } else {
+          printf("%s for the %zu file%s tested.\n", archive_name,
+                 file_count, file_count == 1 ? "" : "s");
+        }
+      }
     }
   } else {
     if (!flag_1 && includes.empty() && excludes.empty()) {
@@ -191,6 +207,33 @@ static bool PromptOverwrite(const std::string& dst) {
         overwrite_mode = kNever;
         return false;
     }
+  }
+}
+
+class TestWriter : public zip_archive::Writer {
+ public:
+  bool Append(uint8_t* buf, size_t size) {
+    crc = static_cast<uint32_t>(crc32(crc, reinterpret_cast<const Bytef*>(buf),
+                                      static_cast<uInt>(size)));
+    return true;
+  }
+  uint32_t crc = 0;
+};
+
+static void TestOne(ZipArchiveHandle zah, const ZipEntry64& entry, const std::string& name) {
+  if (!flag_q) printf("    testing: %-24s ", name.c_str());
+  TestWriter writer;
+  int err = ExtractToWriter(zah, &entry, &writer);
+  if (err < 0) {
+    die(0, "failed to extract %s: %s", name.c_str(), ErrorCodeString(err));
+  }
+  if (writer.crc == entry.crc32) {
+    if (!flag_q) printf("OK\n");
+  } else {
+    if (flag_q) printf("%-23s ", name.c_str());
+    printf("bad CRC %08" PRIx32 "  (should be %08" PRIx32 ")\n", writer.crc, entry.crc32);
+    bad_crc_count++;
+    g_exit_code = 2;
   }
 }
 
@@ -338,7 +381,10 @@ static void InfoOne(const ZipEntry64& entry, const std::string& name) {
 
 static void ProcessOne(ZipArchiveHandle zah, const ZipEntry64& entry, const std::string& name) {
   if (role == kUnzip) {
-    if (flag_l || flag_v) {
+    if (flag_t) {
+      // -t.
+      TestOne(zah, entry, name);
+    } else if (flag_l || flag_v) {
       // -l or -lv or -lq or -v.
       ListOne(entry, name);
     } else {
@@ -398,6 +444,7 @@ static void ShowHelp(bool full) {
         "-o	Always overwrite files\n"
         "-p	Pipe to stdout\n"
         "-q	Quiet\n"
+        "-t	Test compressed data (do not extract)\n"
         "-v	List contents verbosely\n"
         "-x FILE	Exclude files\n");
   } else {
@@ -465,8 +512,15 @@ int main(int argc, char* argv[]) {
     }
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "-d:hjlnopqvx", opts, nullptr)) != -1) {
+    while ((opt = getopt_long(argc, argv, "-Dd:hjlnopqtvx", opts, nullptr)) != -1) {
       switch (opt) {
+        case 'D':
+          // Undocumented and ignored, since we never use the times from the zip
+          // file when creating files or directories. Moreover, libziparchive
+          // only looks at the DOS last modified date anyway. There's no code to
+          // use the GMT modification/access times in the extra field at the
+          // moment.
+          break;
         case 'd':
           flag_d = optarg;
           if (!EndsWith(flag_d, "/")) flag_d += '/';
@@ -488,6 +542,9 @@ int main(int argc, char* argv[]) {
           break;
         case 'q':
           flag_q = true;
+          break;
+        case 't':
+          flag_t = true;
           break;
         case 'v':
           flag_v = true;
@@ -536,5 +593,5 @@ int main(int argc, char* argv[]) {
   ProcessAll(zah);
 
   CloseArchive(zah);
-  return 0;
+  return g_exit_code;
 }
