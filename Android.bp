@@ -239,14 +239,10 @@ cc_defaults {
         "libziparchive",
         "libz",
     ],
-    target: {
-        android: {
-            symlinks: [
-                "unzip",
-                "zipinfo",
-            ],
-        },
-    },
+    symlinks: [
+        "unzip",
+        "zipinfo",
+    ],
 }
 
 cc_binary {
