@@ -118,6 +118,7 @@ cc_library {
         "//apex_available:platform",
         "com.android.art",
         "com.android.art.debug",
+        "com.android.virt",
     ],
 }
 
