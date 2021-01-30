@@ -2,10 +2,6 @@
   "presubmit": [
     {
       "name": "ziparchive-tests"
-    },
-    {
-      "name": "zipalign_tests",
-      "host":  true
     }
   ],
 
