@@ -752,7 +752,10 @@ static int32_t FindEntry(const ZipArchive* archive, std::string_view entryName,
         cdr->uncompressed_size == UINT32_MAX || cdr->compressed_size == UINT32_MAX;
   }
 
-  if (local_header_offset + static_cast<off64_t>(sizeof(LocalFileHeader)) >= cd_offset) {
+  off64_t local_header_end;
+  if (__builtin_add_overflow(local_header_offset, sizeof(LocalFileHeader), &local_header_end) ||
+      local_header_end >= cd_offset) {
+    // We tested >= because the name that follows can't be zero length.
     ALOGW("Zip: bad local hdr offset in zip");
     return kInvalidOffset;
   }
@@ -773,24 +776,30 @@ static int32_t FindEntry(const ZipArchive* archive, std::string_view entryName,
 
   // Check that the local file header name matches the declared name in the central directory.
   CHECK_LE(entryName.size(), UINT16_MAX);
-  auto nameLen = static_cast<uint16_t>(entryName.size());
-  if (lfh->file_name_length != nameLen) {
+  auto name_length = static_cast<uint16_t>(entryName.size());
+  if (lfh->file_name_length != name_length) {
     ALOGW("Zip: lfh name length did not match central directory for %s: %" PRIu16 " %" PRIu16,
-          std::string(entryName).c_str(), lfh->file_name_length, nameLen);
+          std::string(entryName).c_str(), lfh->file_name_length, name_length);
     return kInconsistentInformation;
   }
-  const off64_t name_offset = local_header_offset + sizeof(LocalFileHeader);
-  if (name_offset > cd_offset - lfh->file_name_length) {
-    ALOGW("Zip: lfh name has invalid declared length");
+  off64_t name_offset;
+  if (__builtin_add_overflow(local_header_offset, sizeof(LocalFileHeader), &name_offset)) {
+    ALOGW("Zip: lfh name offset invalid");
+    return kInvalidOffset;
+  }
+  off64_t name_end;
+  if (__builtin_add_overflow(name_offset, name_length, &name_end) || name_end > cd_offset) {
+    // We tested > cd_offset here because the file data that follows can be zero length.
+    ALOGW("Zip: lfh name length invalid");
     return kInvalidOffset;
   }
 
-  std::vector<uint8_t> name_buf(nameLen);
-  if (!archive->mapped_zip.ReadAtOffset(name_buf.data(), nameLen, name_offset)) {
+  std::vector<uint8_t> name_buf(name_length);
+  if (!archive->mapped_zip.ReadAtOffset(name_buf.data(), name_buf.size(), name_offset)) {
     ALOGW("Zip: failed reading lfh name from offset %" PRId64, static_cast<int64_t>(name_offset));
     return kIoError;
   }
-  if (memcmp(entryName.data(), name_buf.data(), nameLen) != 0) {
+  if (memcmp(entryName.data(), name_buf.data(), name_buf.size()) != 0) {
     ALOGW("Zip: lfh name did not match central directory");
     return kInconsistentInformation;
   }
