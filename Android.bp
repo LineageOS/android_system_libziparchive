@@ -274,6 +274,14 @@ cc_fuzz {
     corpus: ["testdata/*"],
 }
 
+cc_fuzz {
+    name: "libziparchive_writer_fuzzer",
+    srcs: ["libziparchive_writer_fuzzer.cpp"],
+    static_libs: ["libziparchive", "libbase", "libz", "liblog"],
+    host_supported: true,
+    corpus: ["testdata/*"],
+}
+
 sh_test {
     name: "ziptool-tests",
     src: "run-ziptool-tests-on-android.sh",
