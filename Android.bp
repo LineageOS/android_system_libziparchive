@@ -309,4 +309,7 @@ python_test_host {
         },
     },
     test_suites: ["general-tests"],
+    test_options: {
+        unit_test: false,
+    },
 }
