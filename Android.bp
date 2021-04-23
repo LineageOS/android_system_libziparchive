@@ -85,8 +85,8 @@ cc_defaults {
     ],
 
     // for FRIEND_TEST
-    static_libs: ["libgtest_prod"],
-    export_static_lib_headers: ["libgtest_prod"],
+    header_libs: ["libgtest_prod_headers"],
+    export_header_lib_headers: ["libgtest_prod_headers"],
 
     export_include_dirs: ["include"],
 }
