@@ -1370,7 +1370,7 @@ bool Reader::IsZeroCopy() const {
 }  // namespace zip_archive
 
 static std::span<uint8_t> bufferToSpan(zip_archive::Writer::Buffer buf) {
-  return {buf.first, ssize_t(buf.second)};
+  return std::span<uint8_t>(buf.first, buf.second);
 }
 
 template <bool OnIncfs>
