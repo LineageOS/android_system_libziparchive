@@ -253,9 +253,8 @@ int32_t ZipWriter::StartAlignedEntryWithTime(std::string_view path, size_t flags
   ExtractTimeAndDate(time, &file_entry.last_mod_time, &file_entry.last_mod_date);
 
   off_t offset = current_offset_ + sizeof(LocalFileHeader) + file_entry.path.size();
-  // prepare a pre-zeroed memory page in case when we need to pad some aligned data.
-  static constexpr auto kPageSize = 4096;
-  static constexpr char kSmallZeroPadding[kPageSize] = {};
+  // prepare a pre-zeroed 4K memory block in case when we need to pad some aligned data.
+  static constexpr char kSmallZeroPadding[4096] = {};
   // use this buffer if our preallocated one is too small
   std::vector<char> zero_padding_big;
   const char* zero_padding = nullptr;
