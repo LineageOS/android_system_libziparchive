@@ -24,7 +24,6 @@ cc_defaults {
         // ZLIB_CONST turns on const for input buffers, which is pretty standard.
         "-DZLIB_CONST",
         "-Werror",
-        "-Wall",
         "-D_FILE_OFFSET_BITS=64",
     ],
     cppflags: [
