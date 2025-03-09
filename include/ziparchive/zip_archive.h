@@ -95,16 +95,16 @@ struct ZipEntryCommon {
 };
 
 struct ZipEntry64;
-// Many users of the library assume the entry size is capped at UNIT32_MAX. So we keep
+// Many users of the library assume the entry size is capped at UINT32_MAX. So we keep
 // the interface for the old ZipEntry here; and we could switch them over to the new
 // ZipEntry64 later.
 struct ZipEntry : public ZipEntryCommon {
-  // Compressed length of this ZipEntry. The maximum value is UNIT32_MAX.
+  // Compressed length of this ZipEntry. The maximum value is UINT32_MAX.
   // Might be present either in the local file header or in the data
   // descriptor footer.
   uint32_t compressed_length{0};
 
-  // Uncompressed length of this ZipEntry. The maximum value is UNIT32_MAX.
+  // Uncompressed length of this ZipEntry. The maximum value is UINT32_MAX.
   // Might be present either in the local file header or in the data
   // descriptor footer.
   uint32_t uncompressed_length{0};
@@ -123,12 +123,12 @@ struct ZipEntry : public ZipEntryCommon {
 
 // Represents information about a zip entry in a zip file.
 struct ZipEntry64 : public ZipEntryCommon {
-  // Compressed length of this ZipEntry. The maximum value is UNIT64_MAX.
+  // Compressed length of this ZipEntry. The maximum value is UINT64_MAX.
   // Might be present either in the local file header, the zip64 extended field,
   // or in the data descriptor footer.
   uint64_t compressed_length{0};
 
-  // Uncompressed length of this ZipEntry. The maximum value is UNIT64_MAX.
+  // Uncompressed length of this ZipEntry. The maximum value is UINT64_MAX.
   // Might be present either in the local file header, the zip64 extended field,
   // or in the data descriptor footer.
   uint64_t uncompressed_length{0};

@@ -231,8 +231,8 @@ cc_benchmark {
     },
 }
 
-cc_binary {
-    name: "ziptool",
+cc_defaults {
+    name: "ziptool_defaults",
     defaults: ["libziparchive_flags"],
     srcs: ["ziptool.cpp"],
     shared_libs: [
@@ -240,12 +240,23 @@ cc_binary {
         "libziparchive",
         "libz",
     ],
-    recovery_available: true,
-    host_supported: true,
     symlinks: [
         "unzip",
         "zipinfo",
     ],
+}
+
+cc_binary {
+    name: "ziptool",
+    defaults: ["ziptool_defaults"],
+    host_supported: true,
+}
+
+cc_binary {
+    name: "ziptool.recovery",
+    defaults: ["ziptool_defaults"],
+    recovery: true,
+    stem: "ziptool",
 }
 
 cc_fuzz {
