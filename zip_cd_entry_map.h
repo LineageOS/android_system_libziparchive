@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 
+#include <bit>
 #include <map>
 #include <memory>
 #include <string_view>
@@ -27,25 +28,6 @@
 #include <log/log.h>
 
 #include "zip_error.h"
-
-/*
- * Round up to the next highest power of 2.
- *
- * Found on http://graphics.stanford.edu/~seander/bithacks.html.
- *
- * TODO: could switch to use std::bit_ceil() once ready
- */
-static constexpr uint32_t RoundUpPower2(uint32_t val) {
-  val--;
-  val |= val >> 1;
-  val |= val >> 2;
-  val |= val >> 4;
-  val |= val >> 8;
-  val |= val >> 16;
-  val++;
-
-  return val;
-}
 
 // This class is the interface of the central directory entries map. The map
 // helps to locate a particular cd entry based on the filename.
@@ -122,7 +104,7 @@ class CdEntryMapZip32 : public CdEntryMapInterface {
      * low as 50% after we round off to a power of 2.  There must be at
      * least one unused entry to avoid an infinite loop during creation.
      */
-    hash_table_size_ = RoundUpPower2(1 + (num_entries * 4) / 3);
+    hash_table_size_ = std::bit_ceil(1u + (num_entries * 4) / 3);
     hash_table_.reset(static_cast<ZipStringOffset*>(
         calloc(hash_table_size_, sizeof(ZipStringOffset))));
 
