@@ -16,9 +16,9 @@
 
 #pragma once
 
-#include <cstdint>
-#include <cstdio>
-#include <ctime>
+#include <stdint.h>
+#include <stdio.h>
+#include <time.h>
 
 #include <gtest/gtest_prod.h>
 #include <memory>
