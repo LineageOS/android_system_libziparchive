@@ -21,6 +21,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <map>
 #include <memory>
 #include <set>
