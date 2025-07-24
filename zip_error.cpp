@@ -42,7 +42,7 @@ const char* ErrorCodeString(int32_t error_code) {
   static_assert((-kLastErrorCode + 1) == arraysize(kErrorMessages),
                 "(-kLastErrorCode + 1) != arraysize(kErrorMessages)");
 
-  const uint32_t idx = -error_code;
+  const uint32_t idx = static_cast<uint32_t>(-error_code);
   if (idx < arraysize(kErrorMessages)) {
     return kErrorMessages[idx];
   }
