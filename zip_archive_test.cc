@@ -631,8 +631,8 @@ TEST(ziparchive, OpenFromMemory) {
   ASSERT_EQ(0, fstat(fd, &sb));
 
   // Memory map the file first and open the archive from the memory region.
-  auto file_map{
-      android::base::MappedFile::FromFd(fd, 0, static_cast<size_t>(sb.st_size), PROT_READ)};
+  auto file_map = android::base::MappedFile::Create(android::base::borrowed_fd(fd), 0,
+                                                    static_cast<size_t>(sb.st_size), PROT_READ);
   ZipArchiveHandle handle;
   ASSERT_EQ(0,
             OpenArchiveFromMemory(file_map->data(), file_map->size(), zip_path.c_str(), &handle));
