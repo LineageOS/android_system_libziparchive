@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "zip_error.h"
+#include "ziparchive/zip_error.h"
 
 #include <android-base/macros.h>
 

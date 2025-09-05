@@ -30,7 +30,7 @@
 #include "android-base/mapped_file.h"
 #include "android-base/memory.h"
 #include "zip_cd_entry_map.h"
-#include "zip_error.h"
+#include "ziparchive/zip_error.h"
 
 class MappedZipFile {
  public:
