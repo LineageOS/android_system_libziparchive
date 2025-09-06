@@ -37,6 +37,7 @@
 #include <sys/mman.h>
 #endif
 
+#include <limits>
 #include <memory>
 #include <optional>
 #include <span>
@@ -1795,8 +1796,13 @@ const uint8_t* MappedZipFile::ReadAtOffset(uint8_t* buf, size_t len, off64_t off
 
   if (data_length_ != -1) {
     off64_t read_end;
-    if (len > std::numeric_limits<off64_t>::max() ||
-        __builtin_add_overflow(off, static_cast<off64_t>(len), &read_end)) {
+#if defined(__LP64__)
+    const bool overflow = len > std::numeric_limits<off64_t>::max();
+#else
+    // len is size_t and the max<size_t> is always smaller than max of off64_t for 32 bit.
+    const bool overflow = false;
+#endif
+    if (overflow || __builtin_add_overflow(off, static_cast<off64_t>(len), &read_end)) {
       ALOGE("Zip: invalid read length %" PRId64 " overflows, offset %" PRId64,
             static_cast<off64_t>(len), off);
       return nullptr;
