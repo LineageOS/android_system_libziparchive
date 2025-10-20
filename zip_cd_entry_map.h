@@ -27,7 +27,7 @@
 #include <android-base/logging.h>
 #include <log/log.h>
 
-#include "zip_error.h"
+#include "ziparchive/zip_error.h"
 
 // This class is the interface of the central directory entries map. The map
 // helps to locate a particular cd entry based on the filename.
