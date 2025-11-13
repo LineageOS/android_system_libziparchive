@@ -21,7 +21,7 @@ static uint32_t ComputeHash(std::string_view name) {
 }
 
 template <typename ZipStringOffset>
-const std::string_view ToStringView(ZipStringOffset& entry, const uint8_t *start) {
+std::string_view ToStringView(const ZipStringOffset& entry, const uint8_t* start) {
   auto name = reinterpret_cast<const char*>(start + entry.name_offset);
   return std::string_view{name, entry.name_length};
 }

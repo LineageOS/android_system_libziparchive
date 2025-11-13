@@ -20,7 +20,6 @@ package {
 
 cc_defaults {
     name: "libziparchive_flags",
-    cpp_std: "c++2a",
     cflags: [
         // ZLIB_CONST turns on const for input buffers, which is pretty standard.
         "-DZLIB_CONST",
