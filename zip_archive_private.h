@@ -50,7 +50,7 @@ class MappedZipFile {
   const uint8_t* ReadAtOffset(uint8_t* buf, size_t len, off64_t off) const;
 
  private:
-  std::unique_ptr<android::base::MappedFile> mapped_file_;
+  std::optional<android::base::MappedFile> mapped_file_;
 
   const int fd_ = -1;
   const off64_t fd_offset_ = 0;
@@ -82,7 +82,7 @@ struct ZipArchive {
   // mapped central directory area
   off64_t directory_offset;
   CentralDirectory central_directory;
-  std::unique_ptr<android::base::MappedFile> directory_map;
+  std::optional<android::base::MappedFile> directory_map;
 
   // number of entries in the Zip archive
   uint64_t num_entries;
